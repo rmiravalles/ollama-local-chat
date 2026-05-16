@@ -40,6 +40,50 @@ The project is designed to provide a simple local-first chat interface where pro
 4. Ensure Ollama is running.
 5. Pull the model you want to use.
 
+## Install Ollama
+
+If Ollama is not already installed, follow the official installation steps for your platform:
+
+To install it on a Linux system, you can use the command below:
+
+```bash
+curl -fsSL https://ollama.com/install.sh | sh
+```
+
+After installation, confirm it is available by running:
+
+```bash
+ollama --version
+```
+
+## Pull and Run a Model
+
+Start the Ollama service in a separate terminal:
+
+```bash
+ollama serve
+```
+
+Then pull the model configured in your `.env` file:
+
+```bash
+ollama pull qwen2.5:1.5b
+```
+
+You can verify the model is installed with:
+
+```bash
+ollama list
+```
+
+If you want to test the model directly from the terminal, run:
+
+```bash
+ollama run qwen2.5:1.5b
+```
+
+Once Ollama is running and the model is pulled, start the Flask app in another terminal with `python app.py`.
+
 Example commands:
 
 ```bash

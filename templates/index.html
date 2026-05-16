@@ -2,43 +2,192 @@
 <html>
 <head>
     <title>Local AI Chat</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="preconnect" href="https://cdn.jsdelivr.net">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/highlight.js@11.11.1/styles/github.min.css">
+    <style>
+        :root {
+            color-scheme: light;
+            --bg: #f7f7f8;
+            --panel: #ffffff;
+            --border: #d9d9e3;
+            --text: #1f2937;
+            --muted: #6b7280;
+            --accent: #111827;
+            --error: #b91c1c;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            font-family: Arial, Helvetica, sans-serif;
+            background: linear-gradient(180deg, #eef2ff 0%, var(--bg) 32%, #f8fafc 100%);
+            color: var(--text);
+        }
+
+        .shell {
+            max-width: 980px;
+            margin: 0 auto;
+            padding: 32px 20px 48px;
+        }
+
+        .card {
+            background: var(--panel);
+            border: 1px solid var(--border);
+            border-radius: 18px;
+            box-shadow: 0 10px 30px rgba(15, 23, 42, 0.06);
+            overflow: hidden;
+        }
+
+        header {
+            padding: 24px 24px 16px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        h1, h2 {
+            margin: 0;
+            line-height: 1.2;
+        }
+
+        .meta, .error {
+            margin-top: 8px;
+            font-size: 0.95rem;
+        }
+
+        .meta {
+            color: var(--muted);
+        }
+
+        .error {
+            color: var(--error);
+            font-weight: 600;
+        }
+
+        form {
+            padding: 24px;
+            display: grid;
+            gap: 14px;
+        }
+
+        textarea {
+            width: 100%;
+            min-height: 160px;
+            resize: vertical;
+            padding: 14px 16px;
+            border-radius: 14px;
+            border: 1px solid var(--border);
+            font: inherit;
+            line-height: 1.5;
+            background: #fff;
+        }
+
+        button {
+            justify-self: start;
+            border: 0;
+            border-radius: 999px;
+            padding: 12px 20px;
+            font: inherit;
+            font-weight: 700;
+            color: #fff;
+            background: var(--accent);
+            cursor: pointer;
+        }
+
+        button:hover {
+            opacity: 0.92;
+        }
+
+        .response-shell {
+            padding: 24px;
+            border-top: 1px solid var(--border);
+            background: #fbfbfd;
+        }
+
+        .response-body {
+            line-height: 1.7;
+            overflow-wrap: anywhere;
+        }
+
+        .response-body :first-child {
+            margin-top: 0;
+        }
+
+        .response-body pre {
+            overflow-x: auto;
+            padding: 16px;
+            border-radius: 14px;
+            background: #f6f8fa;
+        }
+
+        .response-body code {
+            font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+            font-size: 0.95em;
+        }
+
+        .response-empty {
+            color: var(--muted);
+            margin: 0;
+        }
+    </style>
 </head>
 <body>
+    <main class="shell">
+        <section class="card">
+            <header>
+                <h1>Local AI Chat</h1>
+                <p class="meta">Connected to {{ model_name }} at {{ base_url }}</p>
+                {% if error %}
+                    <p class="error">{{ error }}</p>
+                {% endif %}
+            </header>
 
-    <h1>Local AI Chat</h1>
+            <form method="POST">
+                <textarea
+                    name="message"
+                    rows="6"
+                    placeholder="Ask something..."
+                >{{ prompt }}</textarea>
 
-    <p>
-        Connected to {{ model_name }} at {{ base_url }}
-    </p>
+                <button type="submit">Send</button>
+            </form>
 
-    {% if error %}
-        <p style="color: red;">
-            {{ error }}
-        </p>
-    {% endif %}
+            <section class="response-shell">
+                <h2>Response</h2>
 
-    <form method="POST">
+                {% if response %}
+                    <article id="response-output" class="response-body"></article>
+                    <script id="response-data" type="application/json">{{ response | tojson }}</script>
+                {% else %}
+                    <p class="response-empty">Your model response will appear here.</p>
+                {% endif %}
+            </section>
+        </section>
+    </main>
 
-        <textarea
-            name="message"
-            rows="6"
-            cols="60"
-            placeholder="Ask something..."
-        >{{ prompt }}</textarea>
+    <script src="https://cdn.jsdelivr.net/npm/marked@15.0.7/marked.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/dompurify@3.1.6/dist/purify.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/highlight.js@11.11.1/lib/highlight.min.js"></script>
+    <script>
+        const responseData = document.getElementById('response-data');
+        const responseOutput = document.getElementById('response-output');
 
-        <br><br>
+        if (responseData && responseOutput) {
+            const markdown = JSON.parse(responseData.textContent);
+            const renderedHtml = marked.parse(markdown, {
+                breaks: true,
+                gfm: true,
+            });
 
-        <button type="submit">
-            Send
-        </button>
+            responseOutput.innerHTML = DOMPurify.sanitize(renderedHtml);
 
-    </form>
-
-    <hr>
-
-    <h2>Response</h2>
-
-    <p>{{ response }}</p>
+            responseOutput.querySelectorAll('pre code').forEach((block) => {
+                hljs.highlightElement(block);
+            });
+        }
+    </script>
 
 </body>
 </html>
