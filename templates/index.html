@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Local AI Chat</title>
+</head>
+<body>
+
+    <h1>Local AI Chat</h1>
+
+    <p>
+        Connected to {{ model_name }} at {{ base_url }}
+    </p>
+
+    {% if error %}
+        <p style="color: red;">
+            {{ error }}
+        </p>
+    {% endif %}
+
+    <form method="POST">
+
+        <textarea
+            name="message"
+            rows="6"
+            cols="60"
+            placeholder="Ask something..."
+        >{{ prompt }}</textarea>
+
+        <br><br>
+
+        <button type="submit">
+            Send
+        </button>
+
+    </form>
+
+    <hr>
+
+    <h2>Response</h2>
+
+    <p>{{ response }}</p>
+
+</body>
+</html>
