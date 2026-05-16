@@ -72,6 +72,12 @@
             gap: 14px;
         }
 
+        .form-actions {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
         textarea {
             width: 100%;
             min-height: 160px;
@@ -85,7 +91,6 @@
         }
 
         button {
-            justify-self: start;
             border: 0;
             border-radius: 999px;
             padding: 12px 20px;
@@ -104,6 +109,44 @@
             padding: 24px;
             border-top: 1px solid var(--border);
             background: #fbfbfd;
+        }
+
+        .chat-log {
+            display: grid;
+            gap: 16px;
+        }
+
+        .turn {
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            padding: 14px 16px;
+            background: #fff;
+        }
+
+        .turn-label {
+            margin: 0 0 8px;
+            font-size: 0.8rem;
+            font-weight: 700;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            color: var(--muted);
+        }
+
+        .turn-content {
+            line-height: 1.7;
+            overflow-wrap: anywhere;
+        }
+
+        .turn-content pre {
+            overflow-x: auto;
+            padding: 16px;
+            border-radius: 14px;
+            background: #f6f8fa;
+        }
+
+        .turn-content code {
+            font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+            font-size: 0.95em;
         }
 
         .response-body {
@@ -151,17 +194,32 @@
                     placeholder="Ask something..."
                 >{{ prompt }}</textarea>
 
-                <button type="submit">Send</button>
+                <div class="form-actions">
+                    <button type="submit">Send</button>
+                    <button type="submit" name="action" value="clear">Clear Chat</button>
+                </div>
             </form>
 
             <section class="response-shell">
-                <h2>Response</h2>
+                <h2>Chat History</h2>
 
-                {% if response %}
-                    <article id="response-output" class="response-body"></article>
-                    <script id="response-data" type="application/json">{{ response | tojson }}</script>
+                {% if chat_history %}
+                    <div class="chat-log">
+                        {% for message in chat_history %}
+                            <article class="turn">
+                                <p class="turn-label">{{ message.role }}</p>
+
+                                {% if message.role == 'assistant' %}
+                                    <div class="turn-content markdown-output"></div>
+                                    <script type="application/json" class="markdown-source">{{ message.content | tojson }}</script>
+                                {% else %}
+                                    <div class="turn-content">{{ message.content }}</div>
+                                {% endif %}
+                            </article>
+                        {% endfor %}
+                    </div>
                 {% else %}
-                    <p class="response-empty">Your model response will appear here.</p>
+                    <p class="response-empty">Your conversation will appear here after the first message.</p>
                 {% endif %}
             </section>
         </section>
@@ -171,22 +229,25 @@
     <script src="https://cdn.jsdelivr.net/npm/dompurify@3.1.6/dist/purify.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/highlight.js@11.11.1/lib/highlight.min.js"></script>
     <script>
-        const responseData = document.getElementById('response-data');
-        const responseOutput = document.getElementById('response-output');
+        document.querySelectorAll('.markdown-source').forEach((source) => {
+            const target = source.previousElementSibling;
 
-        if (responseData && responseOutput) {
-            const markdown = JSON.parse(responseData.textContent);
+            if (!target) {
+                return;
+            }
+
+            const markdown = JSON.parse(source.textContent);
             const renderedHtml = marked.parse(markdown, {
                 breaks: true,
                 gfm: true,
             });
 
-            responseOutput.innerHTML = DOMPurify.sanitize(renderedHtml);
+            target.innerHTML = DOMPurify.sanitize(renderedHtml);
 
-            responseOutput.querySelectorAll('pre code').forEach((block) => {
+            target.querySelectorAll('pre code').forEach((block) => {
                 hljs.highlightElement(block);
             });
-        }
+        });
     </script>
 
 </body>
